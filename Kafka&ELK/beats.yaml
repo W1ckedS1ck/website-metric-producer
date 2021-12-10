@@ -1,0 +1,50 @@
+apiVersion: beat.k8s.elastic.co/v1beta1
+kind: Beat
+metadata:
+  name: metricbeat
+spec:
+  daemonSet:
+    podTemplate:
+      spec:
+        securityContext:
+          runAsUser: 0
+        containers:
+        - name: metricbeat
+  type: metricbeat
+  version: 7.15.2
+  elasticsearchRef:
+    name: quickstart
+  kibanaRef:
+    name: quickstart
+  config:
+    metricbeat:
+      modules:
+      - module: kafka
+        period: 10s
+        hosts: ["my-kafka-headless.default.svc.cluster.local:9092"]
+---
+apiVersion: beat.k8s.elastic.co/v1beta1
+kind: Beat
+metadata:
+  name: filebeat
+spec:
+  daemonSet:
+    podTemplate:
+      spec:
+        securityContext:
+          runAsUser: 0
+        containers:
+        - name: filebeat
+  type: filebeat
+  version: 7.15.2
+  elasticsearchRef:
+    name: quickstart
+  kibanaRef:
+    name: quickstart
+  config:
+    filebeat:
+      inputs:
+      - type: kafka
+        hosts: ["my-kafka-headless.default.svc.cluster.local:9092"]
+        topics: ["metric"]
+        group_id: "filebeat"
